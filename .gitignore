@@ -1,0 +1,12 @@
+# build output
+dist/
+.work/
+
+# local artifacts
+*.asar
+*.zip
+Install-Log.txt
+
+# OS / editor
+Thumbs.db
+.DS_Store

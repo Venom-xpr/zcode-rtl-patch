@@ -1,0 +1,45 @@
+/*
+ * ZCode RTL Patch v1.0 — CSS layer
+ *
+ * Works together with rtl-patch.js, which sets dir="rtl"/"ltr" on text
+ * blocks and dir="auto" on editable fields. This stylesheet:
+ *   1. keeps code and terminal surfaces strictly left-to-right,
+ *   2. makes alignment follow the detected direction of each block.
+ */
+
+/* Code, math and terminal surfaces never flip. */
+pre,
+.katex,
+.monaco-editor,
+.xterm,
+.cm-editor,
+.cm-content {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Blocks tagged by rtl-patch.js follow their detected direction.
+   !important: must beat the app's own CSS (e.g. `direction: ltr` set by
+   stylesheet would otherwise override the dir attribute). */
+[data-zc-rtl="rtl"] {
+  direction: rtl !important;
+  unicode-bidi: isolate;
+}
+
+[data-zc-rtl="ltr"] {
+  direction: ltr !important;
+  unicode-bidi: isolate;
+}
+
+[data-zc-rtl] {
+  text-align: start !important;
+}
+
+/* Editable fields (composer textarea, inputs) follow typing direction. */
+[data-zc-rtl-auto] {
+  text-align: start !important;
+}
+
+[data-zc-rtl-auto]::placeholder {
+  text-align: start;
+}
