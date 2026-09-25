@@ -7,9 +7,12 @@
 <style>
   /* stand-in for the app's stylesheet: forces LTR left alignment on everything,
      like Tailwind utilities could */
-  p, h1, h2, h3, li, blockquote, td, div, textarea { text-align: left; direction: ltr; }
+  p, h1, h2, h3, li, blockquote, td, div, textarea, [contenteditable] {
+    text-align: left; direction: ltr;
+  }
   body { font-family: sans-serif; max-width: 900px; margin: 20px auto; }
   .msg-plain { white-space: pre-wrap; overflow-wrap: break-word; }
+  .editor { border: 1px solid #bbb; min-height: 44px; padding: 6px; margin: 8px 0; }
 </style>
 <link rel="stylesheet" href="../patch/rtl-patch.css">
 <script src="../patch/rtl-patch.js"></script>
@@ -20,18 +23,9 @@
 
 <p>داداش متنتش برای ترجمه کردم، چون کاربرما خودش بلد نیست درست بگه 😂 بریم:</p>
 
-<blockquote>سایت من ورژنرسه، میخوام صخآتی داشته باشه که مشتری خوبش لیاس ورزشی رو طراحی کنه:
-با طرح آماده‌ای ما رو انتخاب کنه و روش دست بکشه (رنگ، اسم شماره) یا طرحچه»
-خودش/لوگو entirety بسازه یا باید کنه — و قیمت بسته به ور انتخاب،طاهر زنده عوض شه.</blockquote>
-
 <ul>
-  <li>مسیر ساده (۶۹ میلیون): مشتری طرح پایه رو انتخاب می‌کنه + لوگو/ظابط چاپشو أبلود می‌کنه + آپشن‌ها (رنگ،سایز، تعداد، جای چاپ)</li>
-  <li>مسیر حرفه‌ای (۸۶۹ میلیون): مشتری رو خود برداش لوگو رو می‌کشه و میذاره، تکنه می‌ده، بریک کوچیک می‌کنه.</li>
+  <li>مسیر ساده (۶۹ میلیون): مشتری طرح پایه رو انتخاب می‌کنه و لوگو آپلود می‌کنه.</li>
 </ul>
-
-<p>هفته‌ی تمیز AI پایه‌ی cost: $120/mo — همیشه بیدار.</p>
-
-<p>12345 + 678؟</p>
 
 <div class="msg-plain">سلام این پیام کاربره، باید راست‌چین باشه 🙂
 خط دوم هم فارسیه</div>
@@ -39,7 +33,18 @@
 <pre><code>const x = 'سلام در کد مهم نیست';
 function rtl() { return 42; }</code></pre>
 
-<textarea id="composer" rows="3" placeholder="Ask for follow-up changes" style="width:100%"></textarea>
+<textarea id="composer" rows="2" placeholder="Ask for follow-up changes" style="width:100%"></textarea>
+
+<!-- Lexical-like plain-text editor: contenteditable="plaintext-only".
+     Text is inserted programmatically WITHOUT input events (Lexical
+     preventDefaults native edits and writes DOM itself). -->
+<div id="lex" class="editor" contenteditable="plaintext-only" role="textbox" aria-label="chat composer" data-testid="composer"></div>
+
+<!-- contenteditable with an app-forced dir attribute -->
+<div id="ced" class="editor" contenteditable="true" dir="ltr"></div>
+
+<!-- contenteditable whose inner blocks must not be touched individually -->
+<div id="ced2" class="editor" contenteditable="true"></div>
 
 <script>
   // simulate streaming: a new Persian paragraph arrives 400ms after load
@@ -48,6 +53,18 @@ function rtl() { return 42; }</code></pre>
     p.textContent = 'این پاراگراف هنگام استریم اضافه شد و باید راست‌چین شود.';
     document.body.appendChild(p);
   }, 400);
+
+  // simulate rich editors writing DOM themselves, 700ms after load —
+  // no input events dispatched, exactly like Lexical
+  setTimeout(function () {
+    document.getElementById('lex')
+      .appendChild(document.createTextNode('سلام این متن در ادیتور Lexical تایپ شده است'));
+    document.getElementById('ced')
+      .appendChild(document.createTextNode('این هم متن فارسی با dir ثابت برنامه'));
+    var p = document.createElement('p');
+    p.textContent = 'پاراگراف داخل ادیتور';
+    document.getElementById('ced2').appendChild(p);
+  }, 700);
 </script>
 
 </body>

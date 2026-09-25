@@ -1,5 +1,5 @@
 /*
- * ZCode RTL Patch v1.0 — automatic per-block text direction
+ * ZCode RTL Patch v1.3 — automatic per-block text direction
  *
  * Makes right-to-left scripts (Arabic, Persian, Hebrew, Urdu, ...) flow in
  * the correct direction inside chat messages, markdown content and text
@@ -8,9 +8,16 @@
  * paragraph is RTL or LTR. Neutral characters (punctuation, digits, emoji)
  * never decide the direction.
  *
- * Scope: text blocks (p, headings, list items, table cells, blockquotes,
- * plain-text message divs) and editable fields. Code blocks, terminals and
- * editor surfaces (Monaco / CodeMirror / xterm) are always kept LTR.
+ * Scope: text blocks (p, headings, list items, table cells, plain-text
+ * message divs) and editable fields. Code blocks, terminals and editor
+ * surfaces (Monaco / CodeMirror / xterm) are always kept LTR.
+ *
+ * v1.3: rich-text editors (Lexical and friends) write DOM changes
+ * themselves and suppress native `input` events, and may render as
+ * contenteditable="plaintext-only" — so editable fields are now watched
+ * with a scoped MutationObserver and claimed even when the app sets its
+ * own dir attribute. Content inside any editable root is left to the
+ * editor.
  */
 (function () {
   'use strict';
@@ -25,7 +32,7 @@
   // Arabic-Indic (0660-0669) and Extended Arabic-Indic (06F0-06F9) digits
   // which are bidi-neutral, plus the 0700-08FF block (Syriac, Thaana, NKo,
   // Samaritan, Mandaic, Arabic Extended-A/B), Hebrew/Arabic presentation
-  // forms (FB1D-FB4F, FB50-FDFF, FE70-FEFF), and Adlam (1E900-1E94F).
+  // forms (FB1D-FB4F, FB50-FDFF, FE70-FEFF), and Adlam (1E900-1E94F, astral).
   var RTL_CHAR =
     /[\u0590-\u065F\u066A-\u066F\u0671-\u06EF\u06FA-\u08FF\uFB1D-\uFB4F\uFB50-\uFDFF\uFE70-\uFEFF]/;
   var RTL_ASTRAL = /\uD83A[\uDD00-\uDD4F]/; // Adlam surrogate pair
@@ -65,12 +72,14 @@
     H1: 1, H2: 1, H3: 1, H4: 1, H5: 1, H6: 1
   };
 
-  // Editable fields: direction follows typing (dir="auto" is re-evaluated
-  // natively by Chromium on every input event).
+  // Editable fields: chat composers are often rich-text editors (Lexical
+  // renders contenteditable="plaintext-only" for plain-text editors), so
+  // cover every editable flavor.
   var EDITABLE_SELECTOR =
     'textarea, input:not([type]), input[type="text"], input[type="search"], ' +
     'input[type="email"], input[type="url"], input[type="tel"], ' +
-    '[contenteditable="true"], [contenteditable=""]';
+    '[contenteditable="true"], [contenteditable=""], ' +
+    '[contenteditable="plaintext-only"]';
 
   // Never touch anything on or inside these.
   var SKIP_SELECTOR =
@@ -113,11 +122,21 @@
     return false;
   }
 
+  function isEditable(el) {
+    return !!(el && el.matches && el.matches(EDITABLE_SELECTOR));
+  }
+
   function shouldSkip(el) {
     if (!el || el.nodeType !== 1) return true;
     if (el === document.documentElement || el === document.body) return true;
     if (el.closest && el.closest(SKIP_SELECTOR)) return true;
-    // Never fight an explicit dir the app itself set.
+    // Editable fields are claimed by patchEditable — never skipped here,
+    // even if the app set its own dir attribute on them.
+    if (isEditable(el)) return false;
+    // Content inside an editable root belongs to the editor (Lexical,
+    // ProseMirror, ...): only the editable root itself is patched.
+    if (el.closest && el.closest(EDITABLE_SELECTOR)) return true;
+    // Never fight an explicit dir the app itself set on a text block.
     if (el.hasAttribute('dir') && !el.hasAttribute('data-zc-rtl')) return true;
     return false;
   }
@@ -135,21 +154,7 @@
     el.setAttribute('data-zc-dir-state', d);
   }
 
-  function patchEditable(el) {
-    if (el.hasAttribute('data-zc-rtl-auto')) return;
-    if (el.closest && el.closest(SKIP_SELECTOR)) return;
-    if (el.hasAttribute('dir')) return; // app already controls this field
-    el.setAttribute('dir', 'auto');
-    el.setAttribute('data-zc-rtl-auto', '1');
-    // dir="auto" is normally re-evaluated natively per keystroke, but any
-    // author CSS `direction` on the field would override the UA rule, so
-    // set the direction explicitly on input as well.
-    el.addEventListener('input', onEditableInput);
-  }
-
-  function onEditableInput(e) {
-    var el = e.currentTarget || e.target;
-    if (!el || !el.isConnected) return;
+  function evaluateEditable(el) {
     var text = el.value !== undefined ? el.value : el.textContent;
     var d = firstStrongDirection(text);
     if (!d) return; // neutral (empty/digits): keep current direction
@@ -157,6 +162,39 @@
     el.setAttribute('dir', d);
     el.setAttribute('data-zc-rtl', d);
     el.setAttribute('data-zc-dir-state', d);
+  }
+
+  function onEditableInput(e) {
+    var el = e.currentTarget || e.target;
+    if (el && el.isConnected) evaluateEditable(el);
+  }
+
+  // Rich-text editors (Lexical, ProseMirror, ...) apply their own DOM
+  // mutations and commonly preventDefault() native edits, so the `input`
+  // event never fires. Watch the field itself instead — scoped and cheap.
+  function watchEditable(el) {
+    try {
+      var mo = new MutationObserver(function () { evaluateEditable(el); });
+      mo.observe(el, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['dir']
+      });
+    } catch (e) { /* detached field */ }
+    evaluateEditable(el);
+  }
+
+  function patchEditable(el) {
+    if (el.hasAttribute('data-zc-rtl-auto')) return;
+    if (el.closest && el.closest(SKIP_SELECTOR)) return;
+    // Claim the field even if the app set a dir attribute: editors manage
+    // their own DOM writes and dir="auto" alone cannot follow them.
+    el.setAttribute('data-zc-rtl-auto', '1');
+    if (!el.hasAttribute('dir')) el.setAttribute('dir', 'auto');
+    el.addEventListener('input', onEditableInput);
+    watchEditable(el);
   }
 
   // For a text-node change, resolve the governing block ancestor.
@@ -188,7 +226,7 @@
     }
     if (node.nodeType !== 1) return;
     if (shouldSkip(node)) return;
-    if (node.matches(EDITABLE_SELECTOR)) { patchEditable(node); return; }
+    if (isEditable(node)) { patchEditable(node); return; }
     if (isCandidate(node)) queueElement(node);
     // Walk the subtree.
     var els;
@@ -202,7 +240,7 @@
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       if (shouldSkip(el)) continue;
-      if (el.matches(EDITABLE_SELECTOR)) { patchEditable(el); continue; }
+      if (isEditable(el)) { patchEditable(el); continue; }
       if (isCandidate(el)) queueElement(el);
     }
   }
@@ -256,8 +294,8 @@
     scheduleFlush();
   }
 
-  // Note: we deliberately do NOT observe `attributes` — our own dir writes
-  // would otherwise retrigger the observer.
+  // Note: we deliberately do NOT observe `attributes` on the document —
+  // our own dir writes would otherwise retrigger the observer.
   observer.observe(document.documentElement, {
     childList: true,
     characterData: true,
