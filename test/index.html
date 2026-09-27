@@ -2,30 +2,70 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ZCode RTL Patch v1.4 - Markazi Text & Smart Direction Test</title>
+<title>ZCode RTL Patch v1.5 - Sidebar & Typography Test</title>
 <style>
-  /* App stylesheet simulation */
   p, h1, h2, h3, li, blockquote, td, div, textarea, [contenteditable] {
-    text-align: left;
-    direction: ltr;
     box-sizing: border-box;
   }
   body {
     background: #18181b;
     color: #f4f4f5;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 0 20px;
+    margin: 0;
+    padding: 24px;
+    display: flex;
+    gap: 32px;
   }
-  .msg-plain { white-space: pre-wrap; overflow-wrap: break-word; }
+  #sidebar {
+    width: 270px;
+    background: #202024;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .sidebar-section-title {
+    color: #71717a;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    background: #27272a;
+    color: #f4f4f5;
+  }
+  .task-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 190px;
+  }
+  .task-time {
+    color: #a1a1aa;
+    font-size: 11px;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+
+  .chat-area {
+    flex: 1;
+    max-width: 800px;
+  }
   .editor {
     border: 1px solid #3f3f46;
     border-radius: 8px;
     background: #27272a;
     min-height: 48px;
     padding: 10px 14px;
-    margin: 12px 0;
+    margin: 16px 0;
     color: #f4f4f5;
   }
   code {
@@ -39,40 +79,60 @@
     border-radius: 8px;
     border: 1px solid #3f3f46;
   }
-  ul { padding-inline-start: 24px; }
-  li { margin-bottom: 8px; }
 </style>
 <link rel="stylesheet" href="../patch/rtl-patch.css">
 <script src="../patch/rtl-patch.js"></script>
 </head>
 <body>
 
-<p><strong>راه حل:</strong> <code>'use client'</code> رو از <code>ResponsiveList</code> حذف کردم — این کامپوننت هیچ event handler یا state ای نداره، پس بدون اون دایرکتیو هم توی داشبورد سمت سرور رندر میشه هم توی بقیه صفحات به صورت کلاینت کار می‌کنه.</p>
+<aside id="sidebar">
+  <div class="sidebar-section-title">Projects</div>
+  <div class="task-item">
+    <span class="task-title">Zcode-RTL</span>
+    <span class="task-time">15h</span>
+  </div>
+  <div class="task-item">
+    <span class="task-title">Building Client Bot with Next</span>
+    <span class="task-time">18m</span>
+  </div>
 
-<h3>راستی‌آزمایی: این بار با لاگین واقعی خود صفحه داشبورد رو صدا زدم:</h3>
+  <div class="sidebar-section-title" style="margin-top: 20px;">Tasks</div>
+  <div class="task-item" id="sidebar-persian-task">
+    <span class="task-title">سلام دابش، خوبی؟ نظرت</span>
+    <span class="task-time">4m</span>
+  </div>
+  <div class="task-item">
+    <span class="task-title">I want you to make the Z code specially u</span>
+    <span class="task-time">2d</span>
+  </div>
+</aside>
 
-<ul>
-  <li id="test-code-bullet"><code>/dashboard</code> &rarr; محتوای «سانس‌های امروز» و «ظرفیت خالی» سر جاش، «Application error»، بدون هیچ ۲۰۰،</li>
-  <li id="test-list-bullet">staff / sessions / reports / schedules / settings | ۲۰۰ همه &rarr; جزئیات سانس</li>
-</ul>
+<main class="chat-area">
+  <p><strong>راه حل:</strong> <code>'use client'</code> رو از <code>ResponsiveList</code> حذف کردم — این کامپوننت هیچ event handler یا state ای نداره، پس بدون اون دایرکتیو هم توی داشبورد سمت سرور رندر میشه هم توی بقیه صفحات به صورت کلاینت کار می‌کنه.</p>
 
-<p>پنل با بیلد جدید ری‌استارت شده (ربات دست‌نخورده داره کار می‌کنه). یه رفرش (Ctrl+Shift+R) بزن، داشبورد باید کامل بالا بیاد. تست رزرو چند نفره و «رزروهای من» توی تلگرام هم همچنان منتظرتم — لاگ‌ها روشنه.</p>
+  <h3>راستی‌آزمایی: این بار با لاگین واقعی خود صفحه داشبورد رو صدا زدم:</h3>
 
-<!-- Code block: must remain LTR and monospace -->
-<pre><code>// This code must remain strictly LTR
+  <ul>
+    <li><code>/dashboard</code> &rarr; محتوای «سانس‌های امروز» و «ظرفیت خالی» سر جاش، «Application error»، بدون هیچ ۲۰۰،</li>
+    <li>staff / sessions / reports / schedules / settings | ۲۰۰ همه &rarr; جزئیات سانس</li>
+  </ul>
+
+  <p>پنل با بیلد جدید ری‌استارت شده (ربات دست‌نخورده داره کار می‌کنه). یه رفرش (Ctrl+Shift+R) بزن، داشبورد باید کامل بالا بیاد. تست رزرو چند نفره و «رزروهای من» توی تلگرام هم همچنان منتظرتم — لاگ‌ها روشنه.</p>
+
+  <pre><code>// This code must remain strictly LTR
 const routes = ['/dashboard', '/sessions', '/reports'];
 function verifyAuth(req) {
   return req.headers['authorization'] ? true : false;
 }</code></pre>
 
-<!-- Lexical plain-text composer test -->
-<div id="lex" class="editor" contenteditable="plaintext-only" role="textbox" aria-label="chat composer" data-testid="composer"></div>
+  <div id="lex" class="editor" contenteditable="plaintext-only" role="textbox" aria-label="chat composer" data-testid="composer"></div>
+</main>
 
 <script>
   setTimeout(function () {
     var lex = document.getElementById('lex');
-    lex.appendChild(document.createTextNode('سلام، این متن به فونت زیبای «مرکزی» در کادر نوشتن تایپ شده است!'));
-  }, 300);
+    lex.appendChild(document.createTextNode('سلام، این متن با اندازه درشت‌تر و فاصله خطوط بهینه شده در کادر تایپ نمایش داده می‌شود!'));
+  }, 200);
 </script>
 
 </body>

@@ -164,9 +164,12 @@
     '[contenteditable="true"], [contenteditable=""], ' +
     '[contenteditable="plaintext-only"]';
 
+  // Never touch anything on or inside these: code blocks, editors, terminals,
+  // math, and app navigation chrome (sidebar, nav, header).
   var SKIP_SELECTOR =
     'pre, code, kbd, samp, .katex, .monaco-editor, .xterm, .cm-editor, ' +
-    '.cm-content, .ProseMirror-icon, [data-zc-rtl-skip]';
+    '.cm-content, .ProseMirror-icon, #sidebar, [data-workspace-sidebar-panel], ' +
+    'nav, aside, [role="navigation"], header, [data-zc-rtl-skip]';
 
   function isBlockLevelTag(el) {
     var t = el.tagName;

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>Typography & Sidebar Comparison</title>
+<style>
+  @font-face {
+    font-family: 'Markazi Text';
+    src: url('../patch/fonts/markazi-text-arabic.woff2') format('woff2');
+  }
+  body {
+    background: #18181b;
+    color: #f4f4f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 30px;
+    display: flex;
+    gap: 40px;
+  }
+  .sidebar {
+    width: 260px;
+    background: #202024;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    background: #27272a;
+  }
+  .task-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+  .task-time {
+    color: #a1a1aa;
+    font-size: 11px;
+    margin-left: 8px;
+  }
+  
+  /* Broken state (what happened with v1.4 in sidebar): */
+  .task-item-broken {
+    direction: rtl !important;
+    font-family: 'Markazi Text' !important;
+    font-size: 1.14em;
+    line-height: 1.85 !important;
+  }
+
+  /* Fixed state: sidebar row stays LTR layout, title has bidi plaintext */
+  .task-title-bidi {
+    unicode-bidi: plaintext;
+  }
+
+  .chat-demo {
+    flex: 1;
+    max-width: 600px;
+  }
+  .sample {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #202024;
+    border-radius: 8px;
+  }
+  .sample-title {
+    font-size: 12px;
+    color: #a1a1aa;
+    margin-bottom: 8px;
+    font-family: sans-serif;
+  }
+  .t-current {
+    font-family: 'Markazi Text';
+    font-size: 1.14em; /* ~16px -> 18.2px */
+    line-height: 1.85;
+    direction: rtl;
+  }
+  .t-option1 {
+    font-family: 'Markazi Text';
+    font-size: 1.25em; /* ~20px */
+    line-height: 1.6;
+    direction: rtl;
+  }
+  .t-option2 {
+    font-family: 'Markazi Text';
+    font-size: 1.32em; /* ~21px */
+    line-height: 1.55;
+    direction: rtl;
+  }
+  .t-option3 {
+    font-family: 'Markazi Text';
+    font-size: 1.4em; /* ~22.4px */
+    line-height: 1.5;
+    direction: rtl;
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div style="color:#71717a; margin-bottom:8px; font-weight:bold;">Tasks (Broken v1.4)</div>
+  <div class="task-item task-item-broken">
+    <span class="task-title">سلام دابش، خوبی؟ نظرت</span>
+    <span class="task-time">4m</span>
+  </div>
+  <div class="task-item">
+    <span class="task-title">I want you to make the Z code</span>
+    <span class="task-time">2d</span>
+  </div>
+
+  <div style="color:#71717a; margin: 20px 0 8px; font-weight:bold;">Tasks (Fixed: LTR row, UI font)</div>
+  <div class="task-item">
+    <span class="task-title task-title-bidi">سلام دابش، خوبی؟ نظرت</span>
+    <span class="task-time">4m</span>
+  </div>
+  <div class="task-item">
+    <span class="task-title">I want you to make the Z code</span>
+    <span class="task-time">2d</span>
+  </div>
+</div>
+
+<div class="chat-demo">
+  <div class="sample">
+    <div class="sample-title">حالت فعلی (v1.4): font-size: 1.14em (~18px), line-height: 1.85</div>
+    <div class="t-current">
+      این متن با فونت مرکزی در حالت فعلی نمایش داده شده است. همانطور که می‌بینید فونت کمی ریز به نظر می‌رسد اما فاصله بین خطوط باز است. اگر متن چند خطی باشد فضای عمودی زیادی مصرف می‌کند.
+    </div>
+  </div>
+
+  <div class="sample">
+    <div class="sample-title">گزینه ۱: font-size: 1.25em (~20px), line-height: 1.6 (متعادل و خوانا)</div>
+    <div class="t-option1">
+      این متن با فونت مرکزی در حالت اندازه بزرگ‌تر و فاصله خطوط بهینه نمایش داده شده است. فونت واضح‌تر و درشت‌تر خوانده می‌شود در حالی که فاصله خطوط متعادل و طبیعی حفظ شده است.
+    </div>
+  </div>
+
+  <div class="sample">
+    <div class="sample-title">گزینه ۲: font-size: 1.32em (~21px), line-height: 1.55 (درشت و جمع‌وجور)</div>
+    <div class="t-option2">
+      این متن با فونت مرکزی در حالت کاملاً درشت با ارتفاع خط فشرده‌تر نمایش داده شده است. حروف کاملاً بزرگ هستند بدون اینکه بین سطرها فاصله اضافی بیفتد.
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -9,7 +9,7 @@ natural direction of their text.
 
 ## What it does
 
-- **Smart RTL Detection (v1.4)** — does not just look at the first character:
+- **Smart RTL Detection** — does not just look at the first character:
   - **Ignores inline code prefixes** like `<code>/dashboard</code> → محتوای ...`,
     correctly recognizing the sentence as RTL.
   - **Overall text balance**: if RTL characters outnumber LTR characters, the block
@@ -17,15 +17,20 @@ natural direction of their text.
   - **English-prefixed technical sentences**: lines starting with English route
     names or keywords that finish with a Persian/Arabic explanation (e.g.
     `staff / sessions / reports | همه جزئیات`) are recognized as RTL.
-- **Markazi Text Typography** — bundles Google's [Markazi Text](https://fonts.google.com/specimen/Markazi+Text)
-  locally for elegant, authentic Persian and Arabic calligraphy across all messages
-  and the composer. Works 100% offline with zero CDN latency.
+- **Balanced Markazi Text Typography (v1.5)**:
+  - Font size increased to **1.28em** for clear, legible Persian/Arabic reading.
+  - Line-height carefully tuned to **1.58** to keep vertical line spacing compact
+    and avoid oversized vertical line gaps.
+  - Inline code scaled to **0.82em** to seamlessly match the visual x-height of
+    Markazi Text.
+  - 100% offline with bundled local WOFF2 and TTF fonts.
+- **Protected Navigation Chrome (v1.5)** — sidebars, project trees, and task
+  history items stay strictly in their clean, compact LTR layout with system UI fonts;
+  timestamps (e.g. "4m", "15h") remain pinned to the right edge.
 - **Composer & Inputs** — direction follows your typing live, including support for
   the Lexical rich-text editor used by the chat input.
 - **Protected surfaces** — code blocks, inline code, math (KaTeX), the terminal
   (xterm) and code editors (Monaco / CodeMirror) stay strictly left-to-right and monospace.
-- **Layout untouched** — sidebars, toolbars and buttons keep their LTR layout;
-  only text content direction changes.
 - **Safe installer** — never auto-launches the app after patching; you open ZCode
   manually when ready.
 
@@ -95,12 +100,16 @@ with or endorsed by Z.ai.
 این پروژه، متن راست‌به‌چپ هوشمند و فونت زیبای **مرکزی (Markazi Text)** را به
 برنامه‌ی دسکتاپ ZCode اضافه می‌کند:
 
-- **تشخیص هوشمند راست‌به‌چپ (v1.4)**:
+- **تشخیص هوشمند راست‌به‌چپ**:
   - کدهای درون‌خطی در اول جمله نادیده گرفته می‌شوند (مثلاً `<code>/dashboard</code> → محتوای...` به درستی راست‌چین می‌شود).
   - جملاتی که با کلمات انگلیسی شروع می‌شوند اما ادامه‌شان فارسی است بر اساس تعادل متن و انتهای جمله راست‌چین می‌شوند.
   - کادر نوشتن متن جهت تایپ شما را دنبال می‌کند (با پشتیبانی از ادیتور Lexical).
-- **فونت مرکزی (Markazi Text)**:
-  - فونت زیبای مرکزی به صورت فایل محلی همراه پچ بسته شده و بدون نیاز به اینترنت یا CDN اعمال می‌شود.
+- **تایپوگرافی بهینه مرکزی (v1.5)**:
+  - اندازه فونت به ۱.۲۸ برابر برای خوانایی عالی بزرگ‌تر شده است.
+  - ضریب فاصله خطوط روی ۱.۵۸ تنظیم شده تا سطرها فشرده و متوازن بمانند و فاصله عمودی اضافی ایجاد نشود.
+  - کدهای درون‌خطی به صورت متناسب با فونت فارسی هم‌تراز شده‌اند.
+- **تفکیک کامل سایدبار و ناوبری (v1.5)**:
+  - چیدمان تسک‌ها و پروژه‌ها در سایدبار کاملاً چپ‌به‌راست با فونت سیستمی باقی می‌ماند و زمان تسک‌ها ("4m", "2d") در سمت راست قفل است.
 - **بلوک‌های کد و ترمینال**:
   - کدهای برنامه‌نویسی و ترمینال همواره چپ‌به‌راست و مونو‌اسپیس باقی می‌مانند.
 - **نصب کاملاً امن**:
