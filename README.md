@@ -1,22 +1,33 @@
 # ZCode RTL Patch
 
-Adds automatic **right-to-left text direction** to [ZCode Desktop](https://z.ai) for
-**Arabic, Persian, Hebrew, Urdu** and other RTL scripts — chat messages, markdown
-content, and the message composer all follow the natural direction of their text.
+Adds automatic **right-to-left text direction** and **Markazi Text typography** to
+[ZCode Desktop](https://z.ai) for **Arabic, Persian, Hebrew, Urdu** and other RTL
+scripts — chat messages, markdown content, and the message composer all follow the
+natural direction of their text.
 
 ![RTL patch screenshot](docs/screenshot.png)
 
 ## What it does
 
-- **Messages & markdown** — every text block (paragraph, heading, list item,
-  blockquote, table cell, plain-text message) is tagged `dir="rtl"` or `dir="ltr"`
-  using the Unicode **first strong character** rule (UAX #9), re-evaluated live
-  while responses stream in.
-- **Composer & inputs** — direction follows your typing, per keystroke.
+- **Smart RTL Detection (v1.4)** — does not just look at the first character:
+  - **Ignores inline code prefixes** like `<code>/dashboard</code> → محتوای ...`,
+    correctly recognizing the sentence as RTL.
+  - **Overall text balance**: if RTL characters outnumber LTR characters, the block
+    is RTL even if an English word starts the sentence.
+  - **English-prefixed technical sentences**: lines starting with English route
+    names or keywords that finish with a Persian/Arabic explanation (e.g.
+    `staff / sessions / reports | همه جزئیات`) are recognized as RTL.
+- **Markazi Text Typography** — bundles Google's [Markazi Text](https://fonts.google.com/specimen/Markazi+Text)
+  locally for elegant, authentic Persian and Arabic calligraphy across all messages
+  and the composer. Works 100% offline with zero CDN latency.
+- **Composer & Inputs** — direction follows your typing live, including support for
+  the Lexical rich-text editor used by the chat input.
 - **Protected surfaces** — code blocks, inline code, math (KaTeX), the terminal
-  (xterm) and code editors (Monaco / CodeMirror) are never touched.
+  (xterm) and code editors (Monaco / CodeMirror) stay strictly left-to-right and monospace.
 - **Layout untouched** — sidebars, toolbars and buttons keep their LTR layout;
   only text content direction changes.
+- **Safe installer** — never auto-launches the app after patching; you open ZCode
+  manually when ready.
 
 ## Install
 
@@ -25,13 +36,13 @@ Requirements: **Windows**, **ZCode Desktop**, **Node.js 18+** (for the build ste
 ```
 git clone https://github.com/Venom-xpr/zcode-rtl-patch.git
 cd zcode-rtl-patch
-build.cmd      :: builds dist\app-patched.asar from YOUR installed ZCode (~3 min)
+build.cmd      :: builds dist\app-patched.asar from YOUR installed ZCode (~2 min)
 install.cmd    :: closes ZCode, backs up, installs, verifies
 ```
 
-Start ZCode — done. Nothing else is modified: your settings, chats and the
-app's native-module folder stay untouched. The original `app.asar` is backed up
-before anything changes.
+Once installed, start ZCode manually — done! Nothing else is modified: your
+settings, chats and native modules stay untouched. The original `app.asar` is
+backed up automatically before anything changes.
 
 > The patch archive is **not distributed in this repo** — `build.cmd` creates it
 > from your own installed copy, so it always matches your ZCode version and
@@ -50,31 +61,20 @@ ZCode Desktop is an Electron app whose UI lives in `resources/app.asar`. The
 build script:
 
 1. extracts the archive,
-2. copies [`patch/rtl-patch.js`](patch/rtl-patch.js) and
-   [`patch/rtl-patch.css`](patch/rtl-patch.css) into the renderer assets,
-3. injects two lines into `out/renderer/index.html` (after the app stylesheet,
-   before the deferred module bundle, so the observer arms before React mounts),
-4. repacks, keeping the same native modules unpacked as the original,
-5. verifies the three patched files round-trip byte-identically.
+2. copies [`patch/rtl-patch.js`](patch/rtl-patch.js),
+   [`patch/rtl-patch.css`](patch/rtl-patch.css), and the bundled
+   Markazi Text fonts into the renderer assets,
+3. injects references into `out/renderer/index.html` (after the app stylesheet,
+   before the deferred module bundle),
+4. repacks, keeping native binaries (`*.{node,dll,exe}`) unpacked,
+5. verifies the patched files inside the new archive.
 
-The runtime patch is content-driven, not class-driven:
-
-- A `MutationObserver` scans text blocks, computes the first strong directional
-  character (skipping digits, punctuation, emoji), and sets `dir` accordingly.
-- The stylesheet forces `direction`/`text-align` for tagged blocks with
-  `!important`, because the app's own CSS would otherwise override the
-  `dir` attribute.
-- Persian/Arabic-Indic digits (`۰-۹`, `٠-٩`) are bidi-neutral and never flip a
-  paragraph by themselves, exactly like the real UAX #9 algorithm.
-
-You can try the detection engine standalone: serve the `test/` folder with any
-static server (`npx serve test`) and open it in a browser.
+You can try the detection engine standalone: serve the repository with any
+static server (`npx serve .`) and open `/test/index.html` in a browser.
 
 ## Compatibility & notes
 
-- Built and tested against the ZCode Desktop build dated 2026-09-22
-  (`app.asar` 326,915,059 bytes, Windows x64). The build script adapts to your
-  installed version, but a future app restructure may need patch updates.
+- Built and tested against ZCode Desktop on Windows x64.
 - The installer is interactive, self-elevating, and verifies the copied file
   before reporting success; on any failure it restores the original archive.
 - If ZCode is installed in a non-default location, pass it to the build:
@@ -82,19 +82,29 @@ static server (`npx serve test`) and open it in a browser.
 
 ## Legal
 
-This patch is released under the [MIT License](LICENSE). It contains **no**
-ZCode application code — it modifies your locally installed copy on your
-machine. ZCode is a product of Z.ai; this project is not affiliated with or
-endorsed by Z.ai.
+This patch is released under the [MIT License](LICENSE). Markazi Text font is
+licensed under the [SIL Open Font License](http://scripts.sil.org/OFL).
+It contains **no** ZCode application code — it modifies your locally installed
+copy on your machine. ZCode is a product of Z.ai; this project is not affiliated
+with or endorsed by Z.ai.
 
 ---
 
 ## فارسی
 
-این پروژه، متن راست‌به‌چپ (عربی، فارسی، عبری و...) را به برنامه‌ی دسکتاپ ZCode
-اضافه می‌کند: پیام‌ها و بلوک‌های مارک‌داون بر اساس «اولین نویسه‌ی قوی» یونیکد
-راست‌چین می‌شوند، کادر نوشتن جهت تایپ شما را دنبال می‌کند و بلوک‌های کد و ترمینال
-همیشه چپ‌به‌راست می‌مانند.
+این پروژه، متن راست‌به‌چپ هوشمند و فونت زیبای **مرکزی (Markazi Text)** را به
+برنامه‌ی دسکتاپ ZCode اضافه می‌کند:
+
+- **تشخیص هوشمند راست‌به‌چپ (v1.4)**:
+  - کدهای درون‌خطی در اول جمله نادیده گرفته می‌شوند (مثلاً `<code>/dashboard</code> → محتوای...` به درستی راست‌چین می‌شود).
+  - جملاتی که با کلمات انگلیسی شروع می‌شوند اما ادامه‌شان فارسی است بر اساس تعادل متن و انتهای جمله راست‌چین می‌شوند.
+  - کادر نوشتن متن جهت تایپ شما را دنبال می‌کند (با پشتیبانی از ادیتور Lexical).
+- **فونت مرکزی (Markazi Text)**:
+  - فونت زیبای مرکزی به صورت فایل محلی همراه پچ بسته شده و بدون نیاز به اینترنت یا CDN اعمال می‌شود.
+- **بلوک‌های کد و ترمینال**:
+  - کدهای برنامه‌نویسی و ترمینال همواره چپ‌به‌راست و مونو‌اسپیس باقی می‌مانند.
+- **نصب کاملاً امن**:
+  - نصاب بعد از پچ کردن برنامه را خودکار باز نمی‌کند و فایل اصلی نسخه پشتیبان گرفته می‌شود.
 
 نصب (ویندوز + Node.js):
 
@@ -107,6 +117,3 @@ install.cmd     ← بستن ZCode، پشتیبان‌گیری، نصب و تأ�
 
 حذف: اجرای `uninstall.cmd` نسخه‌ی اصلی `app.asar` را برمی‌گرداند.
 بعد از به‌روزرسانی ZCode کافی است دوباره همین دو دستور را اجرا کنید.
-
-این مخزن هیچ کدی از خود برنامه‌ی ZCode را منتشر نمی‌کند؛ وصله فقط روی نسخه‌ی
-نصب‌شده‌ی خود شما اعمال می‌شود.

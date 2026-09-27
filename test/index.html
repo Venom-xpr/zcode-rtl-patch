@@ -2,69 +2,77 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RTL patch test</title>
-<!-- mimics ZCode: app stylesheet first, patch injected after it -->
+<title>ZCode RTL Patch v1.4 - Markazi Text & Smart Direction Test</title>
 <style>
-  /* stand-in for the app's stylesheet: forces LTR left alignment on everything,
-     like Tailwind utilities could */
+  /* App stylesheet simulation */
   p, h1, h2, h3, li, blockquote, td, div, textarea, [contenteditable] {
-    text-align: left; direction: ltr;
+    text-align: left;
+    direction: ltr;
+    box-sizing: border-box;
   }
-  body { font-family: sans-serif; max-width: 900px; margin: 20px auto; }
+  body {
+    background: #18181b;
+    color: #f4f4f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+  }
   .msg-plain { white-space: pre-wrap; overflow-wrap: break-word; }
-  .editor { border: 1px solid #bbb; min-height: 44px; padding: 6px; margin: 8px 0; }
+  .editor {
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    background: #27272a;
+    min-height: 48px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    color: #f4f4f5;
+  }
+  code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre {
+    background: #27272a;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #3f3f46;
+  }
+  ul { padding-inline-start: 24px; }
+  li { margin-bottom: 8px; }
 </style>
 <link rel="stylesheet" href="../patch/rtl-patch.css">
 <script src="../patch/rtl-patch.js"></script>
 </head>
 <body>
 
-<h3>شندینه؟ آره، ولی دوتا مسیر داره با دو تا مقصد زمین تا آسمان:</h3>
+<p><strong>راه حل:</strong> <code>'use client'</code> رو از <code>ResponsiveList</code> حذف کردم — این کامپوننت هیچ event handler یا state ای نداره، پس بدون اون دایرکتیو هم توی داشبورد سمت سرور رندر میشه هم توی بقیه صفحات به صورت کلاینت کار می‌کنه.</p>
 
-<p>داداش متنتش برای ترجمه کردم، چون کاربرما خودش بلد نیست درست بگه 😂 بریم:</p>
+<h3>راستی‌آزمایی: این بار با لاگین واقعی خود صفحه داشبورد رو صدا زدم:</h3>
 
 <ul>
-  <li>مسیر ساده (۶۹ میلیون): مشتری طرح پایه رو انتخاب می‌کنه و لوگو آپلود می‌کنه.</li>
+  <li id="test-code-bullet"><code>/dashboard</code> &rarr; محتوای «سانس‌های امروز» و «ظرفیت خالی» سر جاش، «Application error»، بدون هیچ ۲۰۰،</li>
+  <li id="test-list-bullet">staff / sessions / reports / schedules / settings | ۲۰۰ همه &rarr; جزئیات سانس</li>
 </ul>
 
-<div class="msg-plain">سلام این پیام کاربره، باید راست‌چین باشه 🙂
-خط دوم هم فارسیه</div>
+<p>پنل با بیلد جدید ری‌استارت شده (ربات دست‌نخورده داره کار می‌کنه). یه رفرش (Ctrl+Shift+R) بزن، داشبورد باید کامل بالا بیاد. تست رزرو چند نفره و «رزروهای من» توی تلگرام هم همچنان منتظرتم — لاگ‌ها روشنه.</p>
 
-<pre><code>const x = 'سلام در کد مهم نیست';
-function rtl() { return 42; }</code></pre>
+<!-- Code block: must remain LTR and monospace -->
+<pre><code>// This code must remain strictly LTR
+const routes = ['/dashboard', '/sessions', '/reports'];
+function verifyAuth(req) {
+  return req.headers['authorization'] ? true : false;
+}</code></pre>
 
-<textarea id="composer" rows="2" placeholder="Ask for follow-up changes" style="width:100%"></textarea>
-
-<!-- Lexical-like plain-text editor: contenteditable="plaintext-only".
-     Text is inserted programmatically WITHOUT input events (Lexical
-     preventDefaults native edits and writes DOM itself). -->
+<!-- Lexical plain-text composer test -->
 <div id="lex" class="editor" contenteditable="plaintext-only" role="textbox" aria-label="chat composer" data-testid="composer"></div>
 
-<!-- contenteditable with an app-forced dir attribute -->
-<div id="ced" class="editor" contenteditable="true" dir="ltr"></div>
-
-<!-- contenteditable whose inner blocks must not be touched individually -->
-<div id="ced2" class="editor" contenteditable="true"></div>
-
 <script>
-  // simulate streaming: a new Persian paragraph arrives 400ms after load
   setTimeout(function () {
-    var p = document.createElement('p');
-    p.textContent = 'این پاراگراف هنگام استریم اضافه شد و باید راست‌چین شود.';
-    document.body.appendChild(p);
-  }, 400);
-
-  // simulate rich editors writing DOM themselves, 700ms after load —
-  // no input events dispatched, exactly like Lexical
-  setTimeout(function () {
-    document.getElementById('lex')
-      .appendChild(document.createTextNode('سلام این متن در ادیتور Lexical تایپ شده است'));
-    document.getElementById('ced')
-      .appendChild(document.createTextNode('این هم متن فارسی با dir ثابت برنامه'));
-    var p = document.createElement('p');
-    p.textContent = 'پاراگراف داخل ادیتور';
-    document.getElementById('ced2').appendChild(p);
-  }, 700);
+    var lex = document.getElementById('lex');
+    lex.appendChild(document.createTextNode('سلام، این متن به فونت زیبای «مرکزی» در کادر نوشتن تایپ شده است!'));
+  }, 300);
 </script>
 
 </body>

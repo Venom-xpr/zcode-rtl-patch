@@ -127,12 +127,11 @@ echo ============================================================
 echo  [OK] RTL patch installed successfully!
 echo      app.asar: %NEW_SIZE% bytes
 echo      Backup:   %BACKUP%
+echo.
+echo  Patch complete. Please start ZCode manually when ready.
+echo  پچ با موفقیت انجام شد. لطفاً ZCode را خودتان باز کنید.
 echo ============================================================
 call :log "installed OK"
-echo.
-choice /C YN /M "Start ZCode now? Y=Yes, N=No"
-if errorlevel 2 goto :end_ok
-start "" "%EXE%"
 goto :end_ok
 
 :app_running

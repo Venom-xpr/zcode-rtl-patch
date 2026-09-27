@@ -70,9 +70,18 @@ if (!fs.existsSync(indexHtmlPath)) {
       'This ZCode version is probably not compatible with the patch.');
 }
 
-step(2, 'Copying patch files into the renderer assets...');
+step(2, 'Copying patch files and Markazi Text fonts into the renderer assets...');
 fs.copyFileSync(path.join(PATCH_DIR, 'rtl-patch.js'), path.join(assetsDir, 'rtl-patch.js'));
 fs.copyFileSync(path.join(PATCH_DIR, 'rtl-patch.css'), path.join(assetsDir, 'rtl-patch.css'));
+const srcFonts = path.join(PATCH_DIR, 'fonts');
+const destFonts = path.join(assetsDir, 'fonts');
+if (fs.existsSync(srcFonts)) {
+  fs.mkdirSync(destFonts, { recursive: true });
+  for (const f of fs.readdirSync(srcFonts)) {
+    fs.copyFileSync(path.join(srcFonts, f), path.join(destFonts, f));
+  }
+  console.log('  Markazi Text font files copied.');
+}
 
 step(3, 'Injecting the patch into index.html...');
 const INJECT_MARKER = 'ZCode RTL Patch';
@@ -92,30 +101,15 @@ if (html.includes('assets/rtl-patch.css')) {
   console.log('  injected before </head>.');
 }
 
-step(4, 'Reading the original archive header (native modules to keep unpacked)...');
-// asar header: [4B pickle][4B headerSize][4B][4B jsonLen][json]
-const fd = fs.openSync(ASAR, 'r');
-const pre = Buffer.alloc(16);
-fs.readSync(fd, pre, 0, 16, 0);
-const jsonLen = pre.readUInt32LE(12);
-const jsonBuf = Buffer.alloc(jsonLen);
-fs.readSync(fd, jsonBuf, 0, jsonLen, 16);
-fs.closeSync(fd);
-const header = JSON.parse(jsonBuf.toString('utf8'));
-const unpacked = [];
-(function walk(node, prefix) {
-  for (const [name, child] of Object.entries(node.files || {})) {
-    const rel = prefix ? prefix + '/' + name : name;
-    if (child.files) walk(child, rel);
-    else if (child.unpacked) unpacked.push('**/' + rel);
-  }
-})(header, '');
-console.log(`  ${unpacked.length} native files stay unpacked.`);
+step(4, 'Configuring native modules to keep unpacked (.node, .dll, .exe)...');
+// ZCode uses native node-pty and ssh2 binaries that must reside outside
+// the asar archive so Windows LoadLibrary and process spawning can access them.
+const unpackGlob = '*.{node,dll,exe}';
+console.log(`  Unpack pattern: ${unpackGlob}`);
 
 step(5, 'Repacking into dist/app-patched.asar (this takes a couple of minutes)...');
-const glob = '{' + unpacked.join(',') + '}';
 execSync(
-  `npx --yes @electron/asar pack "${EXTRACTED}" "${OUT_ASAR}" --unpack="${glob}"`,
+  `npx --yes @electron/asar pack "${EXTRACTED}" "${OUT_ASAR}" --unpack="${unpackGlob}"`,
   { stdio: 'inherit' }
 );
 
