@@ -24,11 +24,14 @@ natural direction of their text.
   - Inline code scaled to **0.82em** to seamlessly match the visual x-height of
     Markazi Text.
   - 100% offline with bundled local WOFF2 and TTF fonts.
+- **User Messages & Chat Bubbles (v1.6)** — user sent message bubbles (`[data-v4-user-input-bubble]`)
+  are directly detected and formatted with Markazi Text, right alignment, and 1.28em typography.
+- **Multiline Rich-Text Composer (v1.6)** — in the Lexical composer, each paragraph/line
+  is evaluated independently: Persian lines right-align in Markazi Text, while English lines
+  (like `Hi`) remain left-aligned in the system UI font.
 - **Protected Navigation Chrome (v1.5)** — sidebars, project trees, and task
   history items stay strictly in their clean, compact LTR layout with system UI fonts;
   timestamps (e.g. "4m", "15h") remain pinned to the right edge.
-- **Composer & Inputs** — direction follows your typing live, including support for
-  the Lexical rich-text editor used by the chat input.
 - **Protected surfaces** — code blocks, inline code, math (KaTeX), the terminal
   (xterm) and code editors (Monaco / CodeMirror) stay strictly left-to-right and monospace.
 - **Safe installer** — never auto-launches the app after patching; you open ZCode
@@ -104,6 +107,9 @@ with or endorsed by Z.ai.
   - کدهای درون‌خطی در اول جمله نادیده گرفته می‌شوند (مثلاً `<code>/dashboard</code> → محتوای...` به درستی راست‌چین می‌شود).
   - جملاتی که با کلمات انگلیسی شروع می‌شوند اما ادامه‌شان فارسی است بر اساس تعادل متن و انتهای جمله راست‌چین می‌شوند.
   - کادر نوشتن متن جهت تایپ شما را دنبال می‌کند (با پشتیبانی از ادیتور Lexical).
+- **پشتیبانی کامل از پیام‌های کاربر و کادر تایپ (v1.6)**:
+  - حباب‌های پیام ارسالی کاربر (`[data-v4-user-input-bubble]`) به طور اختصاصی شناسایی و با فونت مرکزی و راست‌چین رندر می‌شوند.
+  - در کادر تایپ چندخطی، هر سطر به صورت مستقل جهت‌دهی می‌شود؛ سطرهای فارسی راست‌چین با فونت مرکزی و سطرهای انگلیسی (مثل `Hi`) چپ‌به‌راست با فونت انگلیسی باقی می‌مانند.
 - **تایپوگرافی بهینه مرکزی (v1.5)**:
   - اندازه فونت به ۱.۲۸ برابر برای خوانایی عالی بزرگ‌تر شده است.
   - ضریب فاصله خطوط روی ۱.۵۸ تنظیم شده تا سطرها فشرده و متوازن بمانند و فاصله عمودی اضافی ایجاد نشود.

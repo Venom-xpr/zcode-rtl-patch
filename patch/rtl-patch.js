@@ -1,22 +1,12 @@
 /*
- * ZCode RTL Patch v1.4 — smart per-block text direction & Markazi Text font
+ * ZCode RTL Patch v1.6 — comprehensive smart text direction & Markazi typography
  *
- * Makes right-to-left scripts (Arabic, Persian, Hebrew, Urdu, ...) flow in
- * the correct direction inside chat messages, markdown content and text
- * inputs.
- *
- * v1.4 Smart Direction Detection:
- *   - Ignores inline technical markup (<code>, <kbd>, <samp>, <pre>) when
- *     determining prose direction (e.g. `<code>/dashboard</code> → محتوا...`
- *     is correctly recognized as RTL).
- *   - Overall text balance: if RTL characters outnumber LTR characters, the
- *     block is RTL regardless of an English word starting the sentence.
- *   - Sentences starting with English technical terms/routes that finish with
- *     a Persian/Arabic explanation (e.g. `staff / sessions | همه جزئیات`)
- *     are recognized as RTL by checking significant RTL presence (>=20%)
- *     and sentence-ending RTL character or enclosing RTL message context.
- *   - Watched with scoped MutationObservers for live streaming and rich-text
- *     editors (Lexical).
+ * Covers:
+ *   1. Assistant messages (Streamdown markdown paragraphs, headings, lists, tables)
+ *   2. User messages (v4 user input bubbles & collapsible content)
+ *   3. Message Composer (Lexical rich-text editor with multi-paragraph line-by-line direction)
+ *   4. Standalone inputs & textareas
+ *   5. Protected surfaces (code, math, terminals, sidebar/navigation chrome)
  */
 (function () {
   'use strict';
@@ -27,16 +17,10 @@
    * Direction detection
    * ------------------------------------------------------------------ */
 
-  // Strong RTL scripts: Hebrew (0590-05FF), Arabic (0600-06FF) minus the
-  // Arabic-Indic (0660-0669) and Extended Arabic-Indic (06F0-06F9) digits
-  // which are bidi-neutral, plus the 0700-08FF block (Syriac, Thaana, NKo,
-  // Samaritan, Mandaic, Arabic Extended-A/B), Hebrew/Arabic presentation
-  // forms (FB1D-FB4F, FB50-FDFF, FE70-FEFF), and Adlam (1E900-1E94F).
   var RTL_CHAR =
     /[\u0590-\u065F\u066A-\u066F\u0671-\u06EF\u06FA-\u08FF\uFB1D-\uFB4F\uFB50-\uFDFF\uFE70-\uFEFF]/;
   var RTL_ASTRAL = /\uD83A[\uDD00-\uDD4F]/; // Adlam surrogate pair
 
-  // Strong LTR scripts: Latin, Greek, Cyrillic, Armenian and Latin Extended
   var LTR_CHAR = new RegExp(
     '[A-Za-z\u00C0-\u02B8\u0370-\u0481\u048A-\u052F\u0531-\u058F\u1E00-\u1FFF]'
   );
@@ -66,8 +50,6 @@
     return { rtl: rtl, ltr: ltr, firstStrong: firstStrong, lastStrong: lastStrong };
   }
 
-  // Extract plain text of an element EXCLUDING inline code markup
-  // (<code>, <kbd>, <samp>, <pre>), so code prefixes don't skew detection.
   function getProseText(el) {
     var text = '';
     function walk(node) {
@@ -89,10 +71,8 @@
     return text;
   }
 
-  // Check if enclosing list, block, or message container is predominantly RTL
   function isEnclosingContextRtl(el) {
     if (!el || !el.parentElement) return false;
-    // Check parent list (ul/ol) if sibling items are RTL
     var list = el.closest && el.closest('ul, ol');
     if (list) {
       var items = list.children;
@@ -102,7 +82,6 @@
         }
       }
     }
-    // Check parent message / section text
     var parent = el.parentElement;
     if (parent && parent.getAttribute && parent.getAttribute('data-zc-rtl') === 'rtl') {
       return true;
@@ -110,16 +89,6 @@
     return false;
   }
 
-  /*
-   * Smart Direction Heuristic:
-   * 1. If only RTL characters exist -> 'rtl'
-   * 2. If only LTR characters exist -> 'ltr'
-   * 3. If prose outside <code> starts with RTL (e.g. `<code>/api</code> مسیر...`) -> 'rtl'
-   * 4. Overall majority: if rtlCount > ltrCount -> 'rtl' (e.g. `'use client' رو حذف کردم`)
-   * 5. Sentences starting with English terms that have meaningful RTL content (>=20% or >=6 chars)
-   *    and either end in RTL (Persian predicate/verb) or are in an RTL context -> 'rtl'
-   * 6. Otherwise fall back to first strong character of full text
-   */
   function smartDirection(el, fullText) {
     if (!fullText) return null;
     var full = analyzeText(fullText);
@@ -130,13 +99,9 @@
     var proseText = el ? getProseText(el) : fullText;
     var prose = analyzeText(proseText);
 
-    // Prose outside code blocks starts with RTL
     if (prose.firstStrong === 'rtl') return 'rtl';
-
-    // Overall majority
     if (full.rtl > full.ltr) return 'rtl';
 
-    // Significant RTL content (e.g. `staff / sessions / ... | ۲۰۰ همه → جزئیات سانس`)
     var totalStrong = full.rtl + full.ltr;
     var rtlRatio = totalStrong > 0 ? (full.rtl / totalStrong) : 0;
     if (full.rtl >= 5 && (rtlRatio >= 0.20 || full.rtl >= 10)) {
@@ -164,8 +129,6 @@
     '[contenteditable="true"], [contenteditable=""], ' +
     '[contenteditable="plaintext-only"]';
 
-  // Never touch anything on or inside these: code blocks, editors, terminals,
-  // math, and app navigation chrome (sidebar, nav, header).
   var SKIP_SELECTOR =
     'pre, code, kbd, samp, .katex, .monaco-editor, .xterm, .cm-editor, ' +
     '.cm-content, .ProseMirror-icon, #sidebar, [data-workspace-sidebar-panel], ' +
@@ -194,9 +157,21 @@
 
   function isCandidate(el) {
     if (!el || el.nodeType !== 1) return false;
+    // Explicit ZCode user message containers
+    if (el.hasAttribute && (
+      el.hasAttribute('data-v4-user-input-collapsible-content') ||
+      el.hasAttribute('data-v4-user-input-bubble')
+    )) return true;
+
     var tag = BLOCK_TAGS[el.tagName];
     if (tag) return true;
     if (el.hasAttribute && el.hasAttribute('data-streamdown')) return true;
+
+    // Divs with whitespace-pre-wrap class (user messages or plain message blocks)
+    if (el.tagName === 'DIV' && el.classList && el.classList.contains('whitespace-pre-wrap')) {
+      return true;
+    }
+
     if (el.tagName === 'DIV' && !hasBlockChild(el)) {
       if (el.hasAttribute && el.hasAttribute('data-streamdown')) return true;
       var cs = getComputedStyle(el);
@@ -215,7 +190,8 @@
     if (el.closest && el.closest(SKIP_SELECTOR)) return true;
     // Editable fields are claimed by patchEditable — never skip them
     if (isEditable(el)) return false;
-    // Content inside an editable root belongs to the editor (Lexical)
+    // Content inside an editable root is handled by evaluateEditableChildren,
+    // so skip from normal document query
     if (el.closest && el.closest(EDITABLE_SELECTOR)) return true;
     // Never fight an explicit dir set on a non-patch block
     if (el.hasAttribute('dir') && !el.hasAttribute('data-zc-rtl')) return true;
@@ -233,11 +209,50 @@
     el.setAttribute('dir', d);
     el.setAttribute('data-zc-rtl', d);
     el.setAttribute('data-zc-dir-state', d);
+
+    // If this is a user message bubble or collapsible content, propagate to bubble
+    if (el.hasAttribute('data-v4-user-input-collapsible-content')) {
+      var bubble = el.closest('[data-v4-user-input-bubble]');
+      if (bubble) {
+        bubble.setAttribute('dir', d);
+        bubble.setAttribute('data-zc-rtl', d);
+        bubble.setAttribute('data-zc-dir-state', d);
+      }
+    }
   }
 
+  /* ------------------------------------------------------------------ *
+   * Editable Fields (Composer / Inputs / Lexical Rich Text)
+   * ------------------------------------------------------------------ */
+
   function evaluateEditable(el) {
+    if (!el || !el.isConnected) return;
+
+    // In rich-text editors (like Lexical), paragraphs (<p>, <div>) are rendered
+    // for each line/block. Evaluate each paragraph independently so mixed
+    // messages (e.g. Line 1: 'Hi' [LTR], Line 2: Persian [RTL]) format correctly.
+    var paragraphs = el.querySelectorAll ? el.querySelectorAll('p, div[role="paragraph"]') : null;
+    var hasRtlChild = false;
+    if (paragraphs && paragraphs.length > 0) {
+      for (var i = 0; i < paragraphs.length; i++) {
+        var p = paragraphs[i];
+        if (p.parentElement !== el && p.closest('p')) continue;
+        var pText = p.textContent;
+        var pd = smartDirection(p, pText);
+        if (pd) {
+          if (pd === 'rtl') hasRtlChild = true;
+          if (p.getAttribute('data-zc-dir-state') !== pd) {
+            p.setAttribute('dir', pd);
+            p.setAttribute('data-zc-rtl', pd);
+            p.setAttribute('data-zc-dir-state', pd);
+          }
+        }
+      }
+    }
+
     var text = el.value !== undefined ? el.value : el.textContent;
     var d = smartDirection(null, text);
+    if (!d && hasRtlChild) d = 'rtl';
     if (!d) return;
     if (el.getAttribute('data-zc-dir-state') === d) return;
     el.setAttribute('dir', d);
@@ -308,7 +323,9 @@
     try {
       els = node.querySelectorAll(
         'p, h1, h2, h3, h4, h5, h6, li, blockquote, dd, dt, figcaption, ' +
-        'caption, summary, address, td, th, [data-streamdown], div, ' +
+        'caption, summary, address, td, th, [data-streamdown], ' +
+        '[data-v4-user-input-collapsible-content], [data-v4-user-input-bubble], ' +
+        '.whitespace-pre-wrap, div, ' +
         EDITABLE_SELECTOR
       );
     } catch (e) { return; }
@@ -342,7 +359,7 @@
 
   function scheduleFlush() {
     if (flushTimer) return;
-    flushTimer = setTimeout(flush, 80);
+    flushTimer = setTimeout(flush, 50);
   }
 
   var observer = new MutationObserver(function (mutations) {

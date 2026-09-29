@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ZCode User Messages & Composer Diagnostics</title>
+<style>
+  body {
+    background: #18181b;
+    color: #f4f4f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 24px;
+  }
+  /* Exact Tailwind classes from ZCode */
+  .text-ui-base { font-size: 14px; line-height: 20px; }
+  .text-foreground { color: #f4f4f5; }
+  .whitespace-pre-wrap { white-space: pre-wrap; }
+  .break-words { overflow-wrap: break-word; }
+  
+  .user-bubble {
+    border: 1px solid #3f3f46;
+    background: #27272a;
+    border-radius: 12px;
+    padding: 12px 16px;
+    max-width: 600px;
+    margin-bottom: 20px;
+  }
+
+  .composer-dock {
+    border: 1px solid #3f3f46;
+    background: #202024;
+    border-radius: 12px;
+    padding: 12px;
+    max-width: 600px;
+  }
+  .lexical-root {
+    outline: none;
+    min-height: 44px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .lexical-root p {
+    margin: 0;
+  }
+</style>
+<link rel="stylesheet" href="../patch/rtl-patch.css">
+<script src="../patch/rtl-patch.js"></script>
+</head>
+<body>
+
+<h3>1. User Message (exact ZCode v4 DOM structure):</h3>
+<div class="group/user-row flex flex-col items-end">
+  <div data-v4-user-input-bubble="true" class="user-bubble text-ui-base text-foreground">
+    <div data-conversation-selectable="true" class="relative min-w-0 flex-1">
+      <div id="user-msg-content" data-v4-user-input-collapsible-content="true" class="min-w-0 overflow-hidden whitespace-pre-wrap break-words">
+سلام، این پیام کاربر است. آیا فونت مرکزی و راست‌چین روی پیام کاربر اعمال شده است؟
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>2. Composer Dock (exact ZCode Lexical DOM structure):</h3>
+<div data-v4-composer-dock="true" class="composer-dock">
+  <div data-v4-composer-dock-content="true">
+    <div id="composer-lexical" role="textbox" contenteditable="true" class="lexical-root text-foreground" data-testid="chat-input-editor">
+      <p class="m-0"><span data-lexical-text="true">Hi</span></p>
+      <p id="composer-persian-p" class="m-0"><span data-lexical-text="true">توی بخش ورودی برنامه این تغییرات جدید رو اعمال نکردی و فقط روی متن موجود توی چت اعمال شده (روی متن های یوزر هم اعمال نشده)</span></p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

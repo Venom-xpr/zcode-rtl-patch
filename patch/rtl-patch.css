@@ -1,5 +1,5 @@
 /*
- * ZCode RTL Patch v1.5 — CSS layer & Markazi Text font
+ * ZCode RTL Patch v1.6 — CSS layer & Markazi Text font
  *
  * Markazi Text: https://fonts.google.com/specimen/Markazi+Text
  * Beautiful, natural typography for Persian & Arabic.
@@ -31,7 +31,7 @@
 }
 
 /* ------------------------------------------------------------------ *
-   Direction & Font Application (Option 1: 1.28em, 1.58 line-height)
+   Direction & Font Application
    ------------------------------------------------------------------ */
 
 /* Blocks tagged by rtl-patch.js follow their detected direction. */
@@ -39,16 +39,31 @@
   direction: rtl !important;
   text-align: start !important;
   unicode-bidi: isolate;
-  font-family: 'Markazi Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
-/* Paragraphs, list items and blockquotes:
-   Option 1 typography: 1.28em font-size makes Markazi Text crisp and readable,
+/* Chat text typography (Assistant messages):
+   Option 1: 1.28em (~20.5px) makes Markazi Text crisp and readable,
    while line-height 1.58 keeps vertical spacing compact and prevents excessive line gaps. */
 p[data-zc-rtl="rtl"],
 li[data-zc-rtl="rtl"],
-blockquote[data-zc-rtl="rtl"],
-div[data-zc-rtl="rtl"] {
+blockquote[data-zc-rtl="rtl"] {
+  font-family: 'Markazi Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-size: 1.28em !important;
+  line-height: 1.58 !important;
+}
+
+/* User Message Bubble & Content:
+   Targets the inner content container directly to prevent any nested em compounding. */
+[data-v4-user-input-bubble][data-zc-rtl="rtl"],
+[data-v4-user-input-bubble] [data-zc-rtl="rtl"] {
+  direction: rtl !important;
+  text-align: start !important;
+}
+
+[data-v4-user-input-collapsible-content][data-zc-rtl="rtl"],
+.whitespace-pre-wrap[data-zc-rtl="rtl"] {
+  direction: rtl !important;
+  text-align: start !important;
   font-family: 'Markazi Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
   font-size: 1.28em !important;
   line-height: 1.58 !important;
@@ -78,15 +93,41 @@ h6[data-zc-rtl="rtl"] {
 }
 
 /* ------------------------------------------------------------------ *
-   Editable Fields (Composer / Inputs)
+   Composer / Inputs / Lexical Rich Text
    ------------------------------------------------------------------ */
 
 [data-zc-rtl-auto] {
   text-align: start !important;
 }
 
-[data-zc-rtl-auto][data-zc-rtl="rtl"],
-[data-zc-rtl-auto][dir="rtl"] {
+/* In Lexical rich-text editors, individual paragraphs (<p>) get formatted per-line:
+   - RTL lines get Markazi Text at 1.28em, line-height 1.58, right-aligned.
+   - LTR lines keep the default UI font, left-aligned. */
+[contenteditable] p[data-zc-rtl="rtl"],
+[contenteditable] [data-zc-rtl="rtl"],
+[data-v4-composer-dock] p[data-zc-rtl="rtl"] {
+  direction: rtl !important;
+  text-align: start !important;
+  unicode-bidi: isolate;
+  font-family: 'Markazi Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 1.28em !important;
+  line-height: 1.58 !important;
+}
+
+[contenteditable] p[data-zc-rtl="ltr"],
+[data-v4-composer-dock] p[data-zc-rtl="ltr"] {
+  direction: ltr !important;
+  text-align: start !important;
+  unicode-bidi: isolate;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 1em !important;
+}
+
+/* Single-line textareas/inputs with RTL content */
+textarea[data-zc-rtl="rtl"],
+input[data-zc-rtl="rtl"] {
+  direction: rtl !important;
+  text-align: start !important;
   font-family: 'Markazi Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 1.28em !important;
   line-height: 1.58 !important;
@@ -114,7 +155,6 @@ header * {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Ensure task list items and project rows in sidebar maintain LTR flex direction */
 #sidebar [data-zc-rtl],
 [data-workspace-sidebar-panel] [data-zc-rtl] {
   direction: ltr !important;
@@ -142,11 +182,13 @@ samp,
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
 }
 
-/* Inline code inside RTL sentences stays LTR and monospace,
-   scaled to match the visual height of 1.28em Markazi Text */
+/* Inline code inside RTL sentences stays LTR and monospace */
 [data-zc-rtl="rtl"] code,
 [data-zc-rtl="rtl"] kbd,
-[data-zc-rtl="rtl"] samp {
+[data-zc-rtl="rtl"] samp,
+[dir="rtl"] code,
+[dir="rtl"] kbd,
+[dir="rtl"] samp {
   direction: ltr !important;
   display: inline-block;
   unicode-bidi: isolate;
