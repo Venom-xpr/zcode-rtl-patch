@@ -138,6 +138,62 @@ input[data-zc-rtl="rtl"] {
 }
 
 /* ------------------------------------------------------------------ *
+   AskUserQuestion Elicitation Dialog
+   Card layout stays LTR (numbers left, footer buttons right); question
+   title, option labels and descriptions follow their detected direction
+   and get Markazi Text when Persian/Arabic.
+   ------------------------------------------------------------------ */
+
+[data-elicitation-dialog-card][data-zc-rtl="rtl"] {
+  direction: rtl;
+}
+
+/* Question title span (ZCode renders it as span.whitespace-pre-wrap; the
+   :scope fallback also covers it when classes change between versions) */
+[data-elicitation-dialog-card] span.whitespace-pre-wrap[data-zc-rtl="rtl"],
+[data-elicitation-dialog-card] [data-elicitation-dialog-body] div div > span[data-zc-rtl="rtl"] {
+  direction: rtl !important;
+  text-align: start !important;
+  unicode-bidi: isolate;
+  font-family: 'Markazi Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-size: 1.28em !important;
+  line-height: 1.58 !important;
+}
+
+/* Option buttons (role=option / role=checkbox) detected as RTL:
+   the inner label/description text right-aligns in Markazi Text while the
+   number badge keeps its position at the start of the row. */
+[data-elicitation-dialog-card] button[data-zc-rtl="rtl"] {
+  direction: rtl !important;
+}
+
+[data-elicitation-dialog-card] button[data-zc-rtl="rtl"] > span:not(:first-child) {
+  direction: rtl !important;
+  text-align: start !important;
+  unicode-bidi: isolate;
+  font-family: 'Markazi Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+[data-elicitation-dialog-card] button[data-zc-rtl="rtl"] > span:not(:first-child) span {
+  font-family: inherit !important;
+}
+
+/* Number badge span stays compact (no Markazi scaling on digits) */
+[data-elicitation-dialog-card] button[data-zc-rtl="rtl"] > span:first-child {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Custom answer textarea inside the dialog when RTL */
+[data-elicitation-dialog-card] textarea[data-zc-rtl="rtl"],
+[data-elicitation-dialog-card] input[data-zc-rtl="rtl"] {
+  direction: rtl !important;
+  text-align: start !important;
+  font-family: 'Markazi Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 1.28em !important;
+  line-height: 1.58 !important;
+}
+
+/* ------------------------------------------------------------------ *
    Protected Navigation Chrome — Sidebar, Nav, Header
    Never flip flex row layouts, never apply Markazi font.
    ------------------------------------------------------------------ */

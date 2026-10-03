@@ -157,6 +157,10 @@
 
   function isCandidate(el) {
     if (!el || el.nodeType !== 1) return false;
+    // AskUserQuestion dialogs are handled by evaluateElicitation, not by the
+    // generic block pipeline (prevents a re-queue loop).
+    if (el.hasAttribute && el.hasAttribute('data-elicitation-dialog-card')) return false;
+
     // Explicit ZCode user message containers
     if (el.hasAttribute && (
       el.hasAttribute('data-v4-user-input-collapsible-content') ||
@@ -187,6 +191,8 @@
   function shouldSkip(el) {
     if (!el || el.nodeType !== 1) return true;
     if (el === document.documentElement || el === document.body) return true;
+    // AskUserQuestion dialogs are always evaluated by evaluateElicitation
+    if (el.hasAttribute && el.hasAttribute('data-elicitation-dialog-card')) return false;
     if (el.closest && el.closest(SKIP_SELECTOR)) return true;
     // Editable fields are claimed by patchEditable — never skip them
     if (isEditable(el)) return false;
@@ -218,6 +224,60 @@
         bubble.setAttribute('data-zc-rtl', d);
         bubble.setAttribute('data-zc-dir-state', d);
       }
+    }
+  }
+
+  // AskUserQuestion elicitation dialog: the question title and each option's
+  // label/description get their own direction (title RTL when Persian), while
+  // the dialog card, number badges and footer buttons keep the app's layout.
+  function evaluateElicitation(card) {
+    if (!card || !card.isConnected) return;
+
+    // Question title: the whitespace-pre-wrap span inside the dialog header.
+    // ZCode renders it as span.whitespace-pre-wrap. Fall back to the direct
+    // span child of the header's text block (after origin/badge spans).
+    var title = card.querySelector(
+      '[data-elicitation-dialog-body] span.whitespace-pre-wrap'
+    );
+    if (!title) {
+      var headerTextBlock = card.querySelector(
+        '[data-elicitation-dialog-body] div div'
+      );
+      if (headerTextBlock) {
+        var spans = headerTextBlock.querySelectorAll(':scope > span');
+        title = spans.length ? spans[spans.length - 1] : null;
+      }
+    }
+    if (title) {
+      var td = smartDirection(title, title.textContent);
+      if (td && title.getAttribute('data-zc-dir-state') !== td) {
+        title.setAttribute('dir', td);
+        title.setAttribute('data-zc-rtl', td);
+        title.setAttribute('data-zc-dir-state', td);
+      }
+      // The question header block (contains badges + title) also follows the title
+      var header = title.closest('div');
+      if (header && !header.hasAttribute('data-elicitation-keep-ltr')) {
+        header.setAttribute('data-elicitation-keep-ltr', '1');
+      }
+    }
+
+    // Option buttons (role=option / role=checkbox) and the custom-answer textarea row
+    var options = card.querySelectorAll('[role="option"], [role="checkbox"]');
+    for (var i = 0; i < options.length; i++) {
+      var btn = options[i];
+      var bd = smartDirection(btn, btn.textContent);
+      if (bd && btn.getAttribute('data-zc-dir-state') !== bd) {
+        btn.setAttribute('dir', bd);
+        btn.setAttribute('data-zc-rtl', bd);
+        btn.setAttribute('data-zc-dir-state', bd);
+      }
+    }
+
+    // Custom answer textarea (last editable inside the card)
+    var inputs = card.querySelectorAll('textarea, input');
+    for (var j = 0; j < inputs.length; j++) {
+      patchEditable(inputs[j]);
     }
   }
 
@@ -325,7 +385,7 @@
         'p, h1, h2, h3, h4, h5, h6, li, blockquote, dd, dt, figcaption, ' +
         'caption, summary, address, td, th, [data-streamdown], ' +
         '[data-v4-user-input-collapsible-content], [data-v4-user-input-bubble], ' +
-        '.whitespace-pre-wrap, div, ' +
+        '[data-elicitation-dialog-card], .whitespace-pre-wrap, div, ' +
         EDITABLE_SELECTOR
       );
     } catch (e) { return; }
@@ -333,6 +393,11 @@
       var el = els[i];
       if (shouldSkip(el)) continue;
       if (isEditable(el)) { patchEditable(el); continue; }
+      // AskUserQuestion dialogs are handled by their dedicated evaluator
+      if (el.hasAttribute && el.hasAttribute('data-elicitation-dialog-card')) {
+        evaluateElicitation(el);
+        continue;
+      }
       if (isCandidate(el)) queueElement(el);
     }
   }
